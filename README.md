@@ -1,6 +1,6 @@
-# python_cicd
+# python
 
-GitHub OAuth 로그인 → GitHub 리파지토리 리스트 조회 → CI/CD 파이프라인 구축을 목표로 하는 파이썬 프로젝트입니다.
+GitHub OAuth 로그인 → GitHub 리파지토리 리스트 조회를 목표로 하는 파이썬 프로젝트입니다.
 웹 페이지(Flask)와 CLI 스크립트 두 가지 방식으로 로그인/리스트 조회를 사용할 수 있습니다.
 
 ## 구조
@@ -8,7 +8,6 @@ GitHub OAuth 로그인 → GitHub 리파지토리 리스트 조회 → CI/CD 파
 - `src/github` — GitHub API 리파지토리 리스트 조회
 - `src/webapp.py` — 로그인 페이지 / 리파지토리 목록 페이지 (Flask)
 - `src/main.py` — CLI로 로그인 후 리파지토리 목록을 터미널에 출력
-- `.github/workflows` — GitHub Actions CI (lint + test)
 
 ## 시작하기
 1. GitHub에서 OAuth App을 등록하고(Settings > Developer settings > OAuth Apps) Client ID/Secret과 콜백 URL(`http://localhost:8080/callback`)을 등록합니다.
