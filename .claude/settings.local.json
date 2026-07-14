@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/tmp/pcicd_venv3/bin/flake8 src *)",
+      "Bash(/tmp/pcicd_venv3/bin/pytest -q)"
+    ]
+  }
+}

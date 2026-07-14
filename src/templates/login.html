@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - python_cicd{% endblock %}
+
+{% block content %}
+  <h1>로그인</h1>
+  <p>GitHub 계정으로 로그인하면 내 리파지토리 목록을 볼 수 있습니다.</p>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+
+  <a class="button" href="{{ url_for('login_github') }}">GitHub로 로그인</a>
+{% endblock %}

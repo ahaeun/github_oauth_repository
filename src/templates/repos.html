@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}리파지토리 목록 - python_cicd{% endblock %}
+
+{% block content %}
+  <div class="header-row">
+    <h1>내 리파지토리 ({{ repos|length }})</h1>
+    <a class="button" href="{{ url_for('logout') }}">로그아웃</a>
+  </div>
+
+  {% if repos %}
+    <ul class="repo-list">
+      {% for repo in repos %}
+        <li class="repo-item">
+          <a href="{{ repo.html_url }}" target="_blank" rel="noopener">{{ repo.full_name }}</a>
+          {% if repo.private %}<span class="badge">private</span>{% endif %}
+          {% if repo.description %}<p class="description">{{ repo.description }}</p>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>조회된 리파지토리가 없습니다.</p>
+  {% endif %}
+{% endblock %}
