@@ -22,3 +22,15 @@ def list_repos(token, per_page=100):
         params = None  # next url already contains query params
 
     return repos
+
+
+def view_repo(token, owner, repo):
+    """특정 리파지토리의 상세 정보를 조회한다."""
+    url = f"{API_BASE}/repos/{owner}/{repo}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+    }
+    response = requests.get(url, headers=headers, timeout=10)
+    response.raise_for_status()
+    return response.json()

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 
 from src.auth import login
-from src.github import list_repos
+from src.github import list_repos, view_repo
 
 
 def main():

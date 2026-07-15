@@ -1,16 +1,27 @@
 import os
+from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, request, session, url_for
 
 from src.auth import OAuthError, build_authorize_url, exchange_code_for_token
-from src.github import list_repos
+from src.github import list_repos, view_repo
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
+
+
+@app.template_filter("format_datetime")
+def format_datetime(value):
+    if not value:
+        return value
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return value
 
 
 def _oauth_config():
@@ -89,6 +100,19 @@ def repos():
         return redirect(url_for("login", error="세션이 만료되었습니다. 다시 로그인해주세요"))
 
     return render_template("repos.html", repos=repo_list)
+
+
+@app.route("/repos/<owner>/<repo>")
+def repo_detail(owner, repo):
+    token = session["github_token"]
+
+    try:
+        repo_detail = view_repo(token, owner, repo)
+    except requests.HTTPError:
+        session.pop("github_token", None)
+        return redirect(url_for("login", error="세션이 만료되었습니다. 다시 로그인해주세요"))
+
+    return render_template("repo_detail.html", repo=repo_detail)
 
 
 @app.route("/logout")

@@ -12,7 +12,7 @@
     <ul class="repo-list">
       {% for repo in repos %}
         <li class="repo-item">
-          <a href="{{ repo.html_url }}" target="_blank" rel="noopener">{{ repo.full_name }}</a>
+          <a href="{{ url_for('repo_detail', owner=repo.owner.login, repo=repo.name) }}">{{ repo.full_name }}</a>
           {% if repo.private %}<span class="badge">private</span>{% endif %}
           {% if repo.description %}<p class="description">{{ repo.description }}</p>{% endif %}
         </li>

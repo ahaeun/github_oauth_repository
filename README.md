@@ -16,7 +16,7 @@ GitHub OAuth 로그인 → GitHub 리파지토리 리스트 조회를 목표로 
 
 ### 웹 페이지로 실행
 ```
-python -m flask --app src.webapp run --host=0.0.0.0 --port 8080
+python3 -m flask --app src.webapp --debug run --host=0.0.0.0 --port 8080
 ```
 `--host=0.0.0.0`을 빼면 `127.0.0.1`에만 열려서 브라우저에서 `localhost`로 접속 시 (IPv6 우선 탐색 때문에) 연결이 거부될 수 있습니다.
 

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ repo.full_name }} - python_cicd{% endblock %}
+
+{% block content %}
+  <a class="back-link" href="{{ url_for('repos') }}">&larr; 목록으로</a>
+
+  <div class="header-row">
+    <h1>{{ repo.name }}</h1>
+    {% if repo.private %}<span class="badge badge-private">private</span>{% endif %}
+  </div>
+
+  <p class="description">👤 : {{ repo.owner.login }}</p>
+
+  {% if repo.description %}<p class="description">{{ repo.description }}</p>{% endif %}
+
+  <div class="meta-card">
+    <ul class="meta">
+      <li><span class="meta-label">📅 생성 일</span><span class="meta-value">{{ repo.created_at|format_datetime }}</span></li>
+      <li><span class="meta-label">🔄 마지막 업데이트</span><span class="meta-value">{{ repo.updated_at|format_datetime }}</span></li>
+      <li><span class="meta-label">⬆️ 마지막 Push</span><span class="meta-value">{{ repo.pushed_at|format_datetime }}</span></li>
+      <li><span class="meta-label">👀 Watchers</span><span class="meta-value">{{ repo.watchers_count }}</span></li>
+      <li><span class="meta-label">🐞 open issues</span><span class="meta-value">{{ repo.open_issues_count }}</span></li>
+      {% if repo.language %}<li><span class="meta-label">💻 언어</span><span class="meta-value">{{ repo.language }}</span></li>{% endif %}
+    </ul>
+  </div>
+
+  <div class="meta-card">
+    <ul class="meta">
+      <li><span class="meta-label">기본 브랜치</span><span class="meta-value">{{ repo.default_branch }}</span></li>
+      <li><span class="meta-label">최근 업데이트</span><span class="meta-value">{{ repo.pushed_at|format_datetime }}</span></li>
+      {% if repo.license %}<li><span class="meta-label">라이선스</span><span class="meta-value">{{ repo.license.name }}</span></li>{% endif %}
+    </ul>
+  </div>
+
+  <a class="button" href="{{ repo.html_url }}" target="_blank" rel="noopener">GitHub에서 열기</a>
+{% endblock %}
