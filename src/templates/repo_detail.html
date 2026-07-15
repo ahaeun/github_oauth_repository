@@ -34,4 +34,92 @@
   </div>
 
   <a class="button" href="{{ repo.html_url }}" target="_blank" rel="noopener">GitHub에서 열기</a>
+  <button type="button" id="commits-toggle" class="button button-secondary">커밋 내역 보기</button>
+
+  <div id="commits-section" class="commits-section" hidden>
+    <p id="commits-status" class="commits-status"></p>
+    <ul id="commits-list" class="commits-list"></ul>
+  </div>
+
+  <script>
+    (function () {
+      var toggleBtn = document.getElementById('commits-toggle');
+      var section = document.getElementById('commits-section');
+      var list = document.getElementById('commits-list');
+      var status = document.getElementById('commits-status');
+      var commitsUrl = "{{ url_for('repo_commits', owner=repo.owner.login, repo=repo.name) }}";
+      var loaded = false;
+
+      function formatKst(isoString) {
+        if (!isoString) return '';
+        var date = new Date(isoString);
+        if (isNaN(date.getTime())) return isoString;
+
+        var kst = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+
+        return kst.getUTCFullYear() + '-' + pad(kst.getUTCMonth() + 1) + '-' + pad(kst.getUTCDate()) +
+          ' ' + pad(kst.getUTCHours()) + ':' + pad(kst.getUTCMinutes()) + ':' + pad(kst.getUTCSeconds());
+      }
+
+      toggleBtn.addEventListener('click', function () {
+        if (!section.hasAttribute('hidden')) {
+          section.setAttribute('hidden', '');
+          toggleBtn.textContent = '커밋 내역 보기';
+          return;
+        }
+
+        section.removeAttribute('hidden');
+        toggleBtn.textContent = '커밋 내역 숨기기';
+
+        if (loaded) return;
+
+        status.textContent = '불러오는 중...';
+        fetch(commitsUrl)
+          .then(function (response) {
+            if (!response.ok) throw new Error('요청 실패');
+            return response.json();
+          })
+          .then(function (commits) {
+            status.textContent = '';
+
+            if (!commits.length) {
+              status.textContent = '커밋 내역이 없습니다.';
+              loaded = true;
+              return;
+            }
+
+            commits.forEach(function (item) {
+              var commit = item.commit || {};
+              var author = commit.author || {};
+
+              var li = document.createElement('li');
+              li.className = 'commit-item';
+
+              var sha = document.createElement('span');
+              sha.className = 'commit-sha';
+              sha.textContent = (item.sha || '').slice(0, 7);
+
+              var message = document.createElement('p');
+              message.className = 'commit-message';
+              message.textContent = (commit.message || '').split('\n')[0];
+
+              var info = document.createElement('span');
+              info.className = 'commit-info';
+              info.textContent = (author.name || '') + ' · ' + formatKst(author.date);
+
+              li.appendChild(sha);
+              li.appendChild(message);
+              li.appendChild(info);
+              list.appendChild(li);
+            });
+
+            loaded = true;
+          })
+          .catch(function () {
+            status.textContent = '커밋 내역을 불러오지 못했습니다.';
+          });
+      });
+    })();
+  </script>
 {% endblock %}

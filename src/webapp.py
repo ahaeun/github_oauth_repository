@@ -1,25 +1,29 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
 from src.auth import OAuthError, build_authorize_url, exchange_code_for_token
-from src.github import list_repos, view_repo
+from src.github import list_repos, search_repos, view_repo, list_commits
 
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
 
+KST_OFFSET = timedelta(hours=9)
+
 
 @app.template_filter("format_datetime")
 def format_datetime(value):
+    """GitHub이 UTC로 내려주는 시각을 한국 시간(KST)으로 변환해 표시한다."""
     if not value:
         return value
     try:
-        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").strftime("%Y-%m-%d %H:%M:%S")
+        utc_dt = datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+        return (utc_dt + KST_OFFSET).strftime("%Y-%m-%d %H:%M:%S")
     except ValueError:
         return value
 
@@ -34,6 +38,7 @@ def _oauth_config():
 
 
 PUBLIC_ENDPOINTS = {"login", "login_github", "callback", "static"}
+ALLOWED_REPO_SORTS = {"full_name", "created", "updated", "pushed"}
 
 
 @app.before_request
@@ -92,9 +97,14 @@ def callback():
 @app.route("/repos")
 def repos():
     token = session["github_token"]
+    
+    q = request.args.get("q", "")
+    sort = request.args.get("sort", "updated")
+    if sort not in ALLOWED_REPO_SORTS:
+        sort = "updated"
 
     try:
-        repo_list = list_repos(token)
+        repo_list = search_repos(token, q, sort) if q else list_repos(token, sort)
     except requests.HTTPError:
         session.pop("github_token", None)
         return redirect(url_for("login", error="세션이 만료되었습니다. 다시 로그인해주세요"))
@@ -113,6 +123,19 @@ def repo_detail(owner, repo):
         return redirect(url_for("login", error="세션이 만료되었습니다. 다시 로그인해주세요"))
 
     return render_template("repo_detail.html", repo=repo_detail)
+
+
+@app.route("/repos/<owner>/<repo>/commits")
+def repo_commits(owner, repo):
+    token = session["github_token"]
+
+    try:
+        commits = list_commits(token, owner, repo)
+    except requests.HTTPError:
+        session.pop("github_token", None)
+        return redirect(url_for("login", error="세션이 만료되었습니다. 다시 로그인해주세요"))
+
+    return jsonify(commits)
 
 
 @app.route("/logout")

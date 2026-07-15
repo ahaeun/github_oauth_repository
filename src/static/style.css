@@ -56,8 +56,110 @@ body {
   background: #333;
 }
 
+.button-secondary {
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #d0d0d0;
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+.button-secondary:hover {
+  background: #f0f0f0;
+}
+
+.commits-section {
+  margin-top: 1.25rem;
+}
+
+.commits-status {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.commits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.commit-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+}
+
+.commit-item + .commit-item {
+  border-top: 1px solid #eee;
+}
+
+.commit-sha {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.commit-message {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commit-info {
+  flex-shrink: 0;
+  color: #888;
+  font-size: 0.8rem;
+}
+
 .error {
   color: #c0392b;
+}
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.search-form input[type="text"] {
+  flex: 1 1 auto;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.search-form select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.search-form button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.search-form button:hover {
+  background: #333;
 }
 
 .repo-list {
@@ -89,6 +191,11 @@ body {
 .badge-private {
   background: #fbe9e7;
   color: #c0392b;
+}
+
+.badge-user {
+  background: #e7f3fe;
+  color: #1a73e8;
 }
 
 .description {
