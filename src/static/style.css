@@ -170,6 +170,12 @@ body {
 .repo-item {
   padding: 0.75rem 0;
   border-bottom: 1px solid #e0e0e0;
+  transition: background-color 1.5s ease;
+}
+
+.repo-item-flash {
+  background-color: #fff8d6;
+  transition: background-color 0s;
 }
 
 .repo-item a {
@@ -252,4 +258,18 @@ body {
   color: #1a1a1a;
   font-weight: 500;
   text-align: right;
+}
+
+.live-toast {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  max-width: 320px;
+  padding: 0.75rem 1rem;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }

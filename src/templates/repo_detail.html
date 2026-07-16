@@ -62,20 +62,11 @@
           ' ' + pad(kst.getUTCHours()) + ':' + pad(kst.getUTCMinutes()) + ':' + pad(kst.getUTCSeconds());
       }
 
-      toggleBtn.addEventListener('click', function () {
-        if (!section.hasAttribute('hidden')) {
-          section.setAttribute('hidden', '');
-          toggleBtn.textContent = '커밋 내역 보기';
-          return;
-        }
-
-        section.removeAttribute('hidden');
-        toggleBtn.textContent = '커밋 내역 숨기기';
-
-        if (loaded) return;
-
+      function loadCommits() {
         status.textContent = '불러오는 중...';
-        fetch(commitsUrl)
+        list.innerHTML = '';
+
+        return fetch(commitsUrl)
           .then(function (response) {
             if (!response.ok) throw new Error('요청 실패');
             return response.json();
@@ -119,7 +110,29 @@
           .catch(function () {
             status.textContent = '커밋 내역을 불러오지 못했습니다.';
           });
+      }
+
+      toggleBtn.addEventListener('click', function () {
+        if (!section.hasAttribute('hidden')) {
+          section.setAttribute('hidden', '');
+          toggleBtn.textContent = '커밋 내역 보기';
+          return;
+        }
+
+        section.removeAttribute('hidden');
+        toggleBtn.textContent = '커밋 내역 숨기기';
+
+        if (loaded) return;
+
+        loadCommits();
       });
+
+      window.__repoFullName = "{{ repo.full_name }}";
+      window.__refreshCommits = function () {
+        section.removeAttribute('hidden');
+        toggleBtn.textContent = '커밋 내역 숨기기';
+        loadCommits();
+      };
     })();
   </script>
 {% endblock %}

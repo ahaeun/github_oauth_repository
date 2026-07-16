@@ -14,7 +14,6 @@
       <option value="full_name" {% if request.args.get('sort') == 'full_name' %}selected{% endif %}>이름순</option>
       <option value="created" {% if request.args.get('sort') == 'created' %}selected{% endif %}>생성일순</option>
       <option value="updated" {% if request.args.get('sort', 'updated') == 'updated' %}selected{% endif %}>업데이트순</option>
-      <option value="pushed" {% if request.args.get('sort') == 'pushed' %}selected{% endif %}>Push순</option>
     </select>
     <button type="submit">검색</button>
   </form>
@@ -22,7 +21,7 @@
   {% if repos %}
     <ul class="repo-list">
       {% for repo in repos %}
-        <li class="repo-item">
+        <li class="repo-item" data-full-name="{{ repo.full_name }}">
           <a href="{{ url_for('repo_detail', owner=repo.owner.login, repo=repo.name) }}">{{ repo.name }}</a>
           {% if not repo.private %}<span class="badge">public</span>{% endif %}
           {% if repo.private %}<span class="badge badge-private">private</span>{% endif %}
@@ -34,4 +33,24 @@
   {% else %}
     <p>조회된 리파지토리가 없습니다.</p>
   {% endif %}
+
+  <script>
+    (function () {
+      var currentSort = "{{ request.args.get('sort', 'updated') }}";
+
+      window.__moveRepoToTop = function (fullName) {
+        if (currentSort !== 'updated' || !fullName) return; // 업데이트순일 때만 맨 위로 옮기는 게 의미 있음
+
+        var list = document.querySelector('.repo-list');
+        if (!list) return;
+
+        var item = list.querySelector('[data-full-name="' + CSS.escape(fullName) + '"]');
+        if (!item) return; // 검색 필터에 안 걸리는 저장소면 화면에 없으니 무시
+
+        list.insertBefore(item, list.firstChild);
+        item.classList.add('repo-item-flash');
+        setTimeout(function () { item.classList.remove('repo-item-flash'); }, 1500);
+      };
+    })();
+  </script>
 {% endblock %}

@@ -1,9 +1,14 @@
+import hashlib
+import hmac
+import json
 import os
+import queue
+import threading
 from datetime import datetime, timedelta
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, Response, jsonify, redirect, render_template, request, session, url_for
 
 from src.auth import OAuthError, build_authorize_url, exchange_code_for_token
 from src.github import list_repos, search_repos, view_repo, list_commits
@@ -14,6 +19,21 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
 
 KST_OFFSET = timedelta(hours=9)
+
+GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET")
+
+_subscribers = []
+_subscribers_lock = threading.Lock()
+
+
+def _broadcast_event(message):
+    with _subscribers_lock:
+        subscribers = list(_subscribers)
+    for subscriber_queue in subscribers:
+        try:
+            subscriber_queue.put_nowait(message)
+        except queue.Full:
+            pass  # 느린/방치된 구독자는 건너뛴다
 
 
 @app.template_filter("format_datetime")
@@ -37,8 +57,8 @@ def _oauth_config():
     }
 
 
-PUBLIC_ENDPOINTS = {"login", "login_github", "callback", "static"}
-ALLOWED_REPO_SORTS = {"full_name", "created", "updated", "pushed"}
+PUBLIC_ENDPOINTS = {"login", "login_github", "callback", "static", "github_webhook"}
+ALLOWED_REPO_SORTS = {"full_name", "created", "updated"}
 
 
 @app.before_request
@@ -97,7 +117,7 @@ def callback():
 @app.route("/repos")
 def repos():
     token = session["github_token"]
-    
+
     q = request.args.get("q", "")
     sort = request.args.get("sort", "updated")
     if sort not in ALLOWED_REPO_SORTS:
@@ -144,5 +164,70 @@ def logout():
     return redirect(url_for("login"))
 
 
+def _verify_webhook_signature(raw_body):
+    if not GITHUB_WEBHOOK_SECRET:
+        return True  # 로컬 개발 편의를 위해 시크릿 미설정 시에는 검증을 건너뛴다
+
+    signature = request.headers.get("X-Hub-Signature-256", "")
+    expected = "sha256=" + hmac.new(
+        GITHUB_WEBHOOK_SECRET.encode(), raw_body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, expected)
+
+
+@app.route("/github/webhook", methods=["POST"])
+def github_webhook():
+    """GitHub Webhook 이벤트를 수신해 실시간 구독자(SSE)에게 전달한다."""
+    if not _verify_webhook_signature(request.get_data()):
+        return "signature mismatch", 401
+
+    event_type = request.headers.get("X-GitHub-Event", "unknown")
+
+    # GitHub Webhook 설정의 Content type이 기본값(application/x-www-form-urlencoded)이면
+    # JSON이 아니라 payload=<form-encoded JSON> 형태로 오므로, 두 경우 모두 처리한다.
+    payload = request.get_json(silent=True)
+    if payload is None:
+        raw_payload = request.form.get("payload")
+        payload = json.loads(raw_payload) if raw_payload else {}
+
+    repository = payload.get("repository") or {}
+
+    message = {
+        "event": event_type,
+        "repo": repository.get("full_name"),
+        "sender": (payload.get("sender") or {}).get("login"),
+    }
+    if event_type == "push":
+        head_commit = payload.get("head_commit") or {}
+        message["ref"] = payload.get("ref")
+        message["commit_message"] = head_commit.get("message")
+
+    _broadcast_event(message)
+
+    return "OK", 200
+
+
+@app.route("/events/stream")
+def events_stream():
+    """연결을 유지하며 webhook으로 들어온 이벤트를 실시간으로 브라우저에 전달한다(SSE)."""
+
+    def generate():
+        subscriber_queue = queue.Queue(maxsize=50)
+        with _subscribers_lock:
+            _subscribers.append(subscriber_queue)
+        try:
+            while True:
+                try:
+                    message = subscriber_queue.get(timeout=15)
+                    yield f"data: {json.dumps(message)}\n\n"
+                except queue.Empty:
+                    yield ": keep-alive\n\n"
+        finally:
+            with _subscribers_lock:
+                _subscribers.remove(subscriber_queue)
+
+    return Response(generate(), mimetype="text/event-stream")
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True, threaded=True)

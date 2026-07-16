@@ -3,12 +3,11 @@ import requests
 API_BASE = "https://api.github.com"
 
 # GitHub Search API(/search/repositories)는 sort로 stars/forks/help-wanted-issues/updated만
-# 지원하고 full_name·created·pushed는 지원하지 않으므로, 검색 결과는 클라이언트에서 정렬한다.
+# 지원하고 full_name·created는 지원하지 않으므로, 검색 결과는 클라이언트에서 정렬한다.
 _SORT_KEYS = {
     "full_name": lambda repo: (repo.get("full_name") or "").lower(),
     "created": lambda repo: repo.get("created_at") or "",
     "updated": lambda repo: repo.get("updated_at") or "",
-    "pushed": lambda repo: repo.get("pushed_at") or "",
 }
 
 
@@ -44,7 +43,7 @@ def list_repos(token, sort="updated", per_page=100):
     return repos
 
 
-def search_repos(token, q, sort="pushed", per_page=100):
+def search_repos(token, q, sort="updated", per_page=100):
     """GitHub Search API(/search/repositories)로 인증된 사용자 소유 리파지토리를 검색한다."""
     headers = _auth_headers(token)
 
